@@ -58,89 +58,6 @@
             border-radius: 15px;
         }
 
-        /* استایل hotspot ها */
-        .hotspot {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.9);
-            border: 3px solid #667eea;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-            color: #667eea;
-            animation: pulse 2s infinite;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .hotspot:hover {
-            transform: scale(1.2);
-            background: #667eea;
-            color: white;
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }
-
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
-            }
-        }
-
-        /* پنل اطلاعات */
-        .info-panel {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            max-width: 250px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            display: none;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .info-panel h3 {
-            margin-bottom: 8px;
-            color: #667eea;
-            font-size: 1.1em;
-        }
-
-        .info-panel p {
-            font-size: 0.9em;
-            line-height: 1.4;
-            margin-bottom: 5px;
-        }
-
-        .info-panel .close-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 50%;
-            transition: background 0.3s ease;
-        }
-
-        .info-panel .close-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
         .controls {
             margin-top: 20px;
             display: flex;
@@ -222,11 +139,6 @@
                 width: 100%;
                 max-width: 300px;
             }
-
-            .info-panel {
-                max-width: 200px;
-                padding: 10px;
-            }
         }
     </style>
 </head>
@@ -248,27 +160,12 @@
                 shadow-intensity="1"
                 loading="lazy"
                 poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='150'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='300' height='150' fill='url(%23grad)' /%3E%3Ctext x='150' y='75' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='16' font-family='Arial'%3Eدر حال بارگذاری مدل...%3C/text%3E%3C/svg%3E">
-                
-                <!-- Hotspot اول -->
-                <button class="hotspot" slot="hotspot-1" data-position="1.9227914552726024m 1.3763450164888984m -0.7812810083791245m" data-normal="-0.6341786388879068m -0.21058752951867019m -0.7439558766415554m" data-visibility-attribute="visible">
-                    1
-                </button>
-
             </model-viewer>
-            
-            <!-- پنل اطلاعات -->
-            <div class="info-panel" id="infoPanel">
-                <button class="close-btn" id="closeBtn">×</button>
-                <h3 id="infoTitle">عنوان</h3>
-                <p id="infoDescription">توضیحات...</p>
-                <p id="infoDetails">جزئیات اضافی...</p>
-            </div>
         </div>
         
         <div class="controls">
             <button class="btn" id="arButton">📱 مشاهده در AR</button>
             <button class="btn" id="resetCamera">🔄 بازنشانی دوربین</button>
-            <button class="btn" id="toggleHotspots">👁️ نمایش/پنهان کردن نقاط</button>
         </div>
         
         <div class="status" id="status">آماده برای نمایش</div>
@@ -277,21 +174,11 @@
             <h3>📋 راهنمای استفاده</h3>
             <p>• روی دکمه "مشاهده در AR" کلیک کنید</p>
             <p>• با گوشی خود در محیط حرکت کنید</p>
-            <p>• روی نقاط شماره‌گذاری شده کلیک کنید تا اطلاعات را ببینید</p>
             <p>• مدل با مقیاس ثابت در محیط واقعی نمایش داده می‌شود</p>
         </div>
     </div>
 
     <script>
-        // اطلاعات hotspot ها
-        const hotspotData = {
-            1: {
-                title: "مانیتور",
-                description: "کلاه ایمنی فضانورد با سیستم تنفس پیشرفته",
-                details: "ساخته شده از مواد مقاوم در برابر تشعشع"
-            },
-        };
-
         // تشخیص نوع دستگاه و انتخاب مدل مناسب
         function detectDeviceAndSetModel() {
             const modelViewer = document.getElementById('arModel');
@@ -302,56 +189,14 @@
             
             if (isIOS) {
                 // برای iOS از فرمت USDZ استفاده کنید
-                modelViewer.src = 'modelusdz.usdz';
-                modelViewer.setAttribute('ios-src', 'modelusdz.usdz');
+                modelViewer.src = 'https://modelviewer.dev/shared-assets/models/Astronaut.usdz';
+                modelViewer.setAttribute('ios-src', 'https://modelviewer.dev/shared-assets/models/Astronaut.usdz');
                 deviceInfo.textContent = 'iOS - مدل USDZ';
             } else {
                 // برای Android و سایر دستگاه‌ها از فرمت GLB استفاده کنید
-                modelViewer.src = 'modelglb.glb';
+                modelViewer.src = 'https://modelviewer.dev/shared-assets/models/Astronaut.glb';
                 deviceInfo.textContent = 'Android/Web - مدل GLB';
             }
-        }
-
-        // نمایش اطلاعات hotspot
-        function showHotspotInfo(hotspotNumber, event) {
-            const infoPanel = document.getElementById('infoPanel');
-            const infoTitle = document.getElementById('infoTitle');
-            const infoDescription = document.getElementById('infoDescription');
-            const infoDetails = document.getElementById('infoDetails');
-            
-            const data = hotspotData[hotspotNumber];
-            
-            if (data) {
-                infoTitle.textContent = data.title;
-                infoDescription.textContent = data.description;
-                infoDetails.textContent = data.details;
-                
-                // موقعیت‌یابی پنل نسبت به موقعیت کلیک
-                const rect = event.target.getBoundingClientRect();
-                const viewerRect = document.getElementById('arModel').getBoundingClientRect();
-                
-                infoPanel.style.left = (rect.left - viewerRect.left + 40) + 'px';
-                infoPanel.style.top = (rect.top - viewerRect.top - 10) + 'px';
-                infoPanel.style.display = 'block';
-            }
-        }
-
-        // پنهان کردن پنل اطلاعات
-        function hideInfoPanel() {
-            document.getElementById('infoPanel').style.display = 'none';
-        }
-
-        // تنظیم hotspot ها
-        function setupHotspots() {
-            const hotspots = document.querySelectorAll('.hotspot');
-            
-            hotspots.forEach(hotspot => {
-                hotspot.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    const hotspotNumber = parseInt(hotspot.textContent);
-                    showHotspotInfo(hotspotNumber, event);
-                });
-            });
         }
 
         // تنظیم رویدادها
@@ -359,8 +204,6 @@
             const modelViewer = document.getElementById('arModel');
             const arButton = document.getElementById('arButton');
             const resetCamera = document.getElementById('resetCamera');
-            const toggleHotspots = document.getElementById('toggleHotspots');
-            const closeBtn = document.getElementById('closeBtn');
             const status = document.getElementById('status');
 
             // دکمه AR
@@ -382,33 +225,12 @@
             resetCamera.addEventListener('click', () => {
                 modelViewer.resetTurntableRotation();
                 status.textContent = 'دوربین بازنشانی شد';
-                hideInfoPanel();
-            });
-
-            // نمایش/پنهان کردن hotspot ها
-            toggleHotspots.addEventListener('click', () => {
-                const hotspots = document.querySelectorAll('.hotspot');
-                hotspots.forEach(hotspot => {
-                    hotspot.style.display = hotspot.style.display === 'none' ? 'flex' : 'none';
-                });
-                hideInfoPanel();
-            });
-
-            // بستن پنل اطلاعات
-            closeBtn.addEventListener('click', hideInfoPanel);
-
-            // بستن پنل با کلیک روی مدل
-            modelViewer.addEventListener('click', (event) => {
-                if (!event.target.classList.contains('hotspot')) {
-                    hideInfoPanel();
-                }
             });
 
             // رویدادهای مدل
             modelViewer.addEventListener('load', () => {
                 status.textContent = 'مدل بارگذاری شد - آماده برای AR';
                 console.log('Model loaded successfully');
-                setupHotspots();
             });
 
             modelViewer.addEventListener('error', (event) => {
