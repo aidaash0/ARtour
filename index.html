@@ -89,6 +89,51 @@
             transform: translateY(0);
         }
 
+        .info-panel {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .info-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hotspot {
+            display: block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid #007bff;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+            transition: all 0.3s ease;
+        }
+
+        .hotspot:hover {
+            transform: scale(1.2);
+            background: #007bff;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+        }
+
         .status {
             text-align: center;
             color: white;
@@ -152,29 +197,61 @@
             <model-viewer
                 id="arModel"
                 camera-controls
+                enable-pan
+                touch-action="pan-y"
                 ar
                 ar-modes="webxr scene-viewer quick-look"
                 ar-scale="fixed"
                 ar-placement="floor"
-                environment-image="neutral"
-                shadow-intensity="1"
-                loading="lazy"
-                poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='150'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='300' height='150' fill='url(%23grad)' /%3E%3Ctext x='150' y='75' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='16' font-family='Arial'%3Eدر حال بارگذاری مدل...%3C/text%3E%3C/svg%3E">
+                reveal="interaction"
+                auto-rotate
+                auto-rotate-delay="3000"
+                rotation-per-second="30deg"
+                interaction-prompt="none"
+                
+                <!-- Interactive Hotspots -->
+                <button class="hotspot" slot="hotspot-1" data-position="1m 0.5m 0.5m" data-normal="0m 1m 0m" data-info="door">
+                    <div class="HotspotAnnotation">🚪</div>
+                </button>
+                
+                <button class="hotspot" slot="hotspot-2" data-position="-1m 0.8m 0m" data-normal="0m 1m 0m" data-info="window">
+                    <div class="HotspotAnnotation">🪟</div>
+                </button>
+                
+                <button class="hotspot" slot="hotspot-3" data-position="0m 0.3m -1m" data-normal="0m 1m 0m" data-info="furniture">
+                    <div class="HotspotAnnotation">🪑</div>
+                </button>
+                
+                <button class="hotspot" slot="hotspot-4" data-position="0.5m 1.2m 0.3m" data-normal="0m 1m 0m" data-info="light">
+                    <div class="HotspotAnnotation">💡</div>
+                </button>
+                
+                <div class="progress-bar" slot="progress-bar">
+                    <div class="update-bar"></div>
+                </div>
             </model-viewer>
         </div>
         
         <div class="controls">
             <button class="btn" id="arButton">📱 مشاهده در AR</button>
             <button class="btn" id="resetCamera">🔄 بازنشانی دوربین</button>
+            <button class="btn" id="autoRotate">🔄 چرخش خودکار</button>
+            <button class="btn" id="fullscreen">🔍 تمام صفحه</button>
+        </div>
+        
+        <div class="info-panel" id="infoPanel">
+            <h3>اطلاعات تکمیلی</h3>
+            <p id="infoContent">روی هر نقطه فعال کلیک کنید تا اطلاعات بیشتری مشاهده کنید.</p>
         </div>
         
         <div class="status" id="status">آماده برای نمایش</div>
         
         <div class="instructions">
             <h3>📋 راهنمای استفاده</h3>
-            <p>• روی دکمه "مشاهده در AR" کلیک کنید</p>
-            <p>• با گوشی خود در محیط حرکت کنید</p>
-            <p>• مدل با مقیاس ثابت در محیط واقعی نمایش داده می‌شود</p>
+            <p>• روی دکمه "مشاهده در AR" کلیک کنید تا مدل در محیط واقعی نمایش داده شود</p>
+            <p>• با گوشی خود در محیط حرکت کنید تا مدل از زوایای مختلف مشاهده کنید</p>
+            <p>• روی نقاط فعال (نقاط رنگی) کلیک کنید تا اطلاعات بیشتری ببینید</p>
+            <p>• مدل به صورت خودکار مقیاس ثابت در محیط واقعی نمایش داده می‌شود</p>
         </div>
     </div>
 
@@ -190,6 +267,7 @@
             if (isIOS) {
                 // برای iOS از فرمت USDZ استفاده کنید
                 modelViewer.src = 'modelusdz.usdz';
+                modelViewer.setAttribute('ios-src', 'YOUR_USDZ_MODEL_URL_HERE.usdz');
                 deviceInfo.textContent = 'iOS - مدل USDZ';
             } else {
                 // برای Android و سایر دستگاه‌ها از فرمت GLB استفاده کنید
@@ -198,32 +276,122 @@
             }
         }
 
+        // اطلاعات تعاملی برای هر نقطه
+        const hotspotInfo = {
+            door: {
+                title: "🚪 درب ورودی",
+                content: "این درب ورودی اصلی اتاق است. درب از جنس چوب بلوط ساخته شده و دارای قفل امنیتی مدرن می‌باشد. ابعاد: 200x80 سانتی‌متر"
+            },
+            window: {
+                title: "🪟 پنجره",
+                content: "پنجره‌ای با شیشه دوجداره که نور طبیعی زیادی وارد اتاق می‌کند. دارای پرده‌های قابل تنظیم و فریم فلزی مقاوم. ابعاد: 150x120 سانتی‌متر"
+            },
+            furniture: {
+                title: "🪑 مبلمان",
+                content: "مجموعه‌ای از مبلمان شامل مبل، میز و صندلی‌های راحتی. تمام قطعات از جنس چرم طبیعی و دارای طراحی مدرن هستند."
+            },
+            light: {
+                title: "💡 سیستم نورپردازی",
+                content: "سیستم نورپردازی LED هوشمند با قابلیت تنظیم شدت نور و رنگ. قابلیت کنترل از طریق اپلیکیشن موبایل و دستیار صوتی."
+            }
+        };
+
         // تنظیم رویدادها
         function setupEventListeners() {
             const modelViewer = document.getElementById('arModel');
             const arButton = document.getElementById('arButton');
             const resetCamera = document.getElementById('resetCamera');
+            const autoRotate = document.getElementById('autoRotate');
+            const fullscreen = document.getElementById('fullscreen');
+            const infoPanel = document.getElementById('infoPanel');
+            const infoContent = document.getElementById('infoContent');
             const status = document.getElementById('status');
 
             // دکمه AR
             arButton.addEventListener('click', () => {
-                modelViewer.activateAR();
-                status.textContent = 'AR فعال شد - با گوشی حرکت کنید';
+                if (modelViewer.canActivateAR) {
+                    modelViewer.activateAR();
+                    status.textContent = 'حالت AR فعال شد - با گوشی خود حرکت کنید';
+                } else {
+                    alert('متأسفانه دستگاه شما از AR پشتیبانی نمی‌کند.');
+                }
             });
 
             // بازنشانی دوربین
             resetCamera.addEventListener('click', () => {
                 modelViewer.resetTurntableRotation();
+                modelViewer.jumpCameraToGoal();
                 status.textContent = 'دوربین بازنشانی شد';
+            });
+
+            // چرخش خودکار
+            let autoRotateEnabled = true;
+            autoRotate.addEventListener('click', () => {
+                autoRotateEnabled = !autoRotateEnabled;
+                if (autoRotateEnabled) {
+                    modelViewer.setAttribute('auto-rotate', '');
+                    autoRotate.textContent = '⏸️ توقف چرخش';
+                    status.textContent = 'چرخش خودکار فعال شد';
+                } else {
+                    modelViewer.removeAttribute('auto-rotate');
+                    autoRotate.textContent = '🔄 چرخش خودکار';
+                    status.textContent = 'چرخش خودکار غیرفعال شد';
+                }
+            });
+
+            // تمام صفحه
+            fullscreen.addEventListener('click', () => {
+                if (modelViewer.requestFullscreen) {
+                    modelViewer.requestFullscreen();
+                } else if (modelViewer.webkitRequestFullscreen) {
+                    modelViewer.webkitRequestFullscreen();
+                } else if (modelViewer.msRequestFullscreen) {
+                    modelViewer.msRequestFullscreen();
+                }
             });
 
             // رویدادهای مدل
             modelViewer.addEventListener('load', () => {
-                status.textContent = 'مدل بارگذاری شد - آماده برای AR';
+                status.textContent = 'مدل با موفقیت بارگذاری شد';
             });
 
-            modelViewer.addEventListener('error', () => {
+            modelViewer.addEventListener('error', (event) => {
                 status.textContent = 'خطا در بارگذاری مدل';
+                console.error('Model loading error:', event.detail);
+            });
+
+            modelViewer.addEventListener('ar-status', (event) => {
+                if (event.detail.status === 'session-started') {
+                    status.textContent = 'جلسه AR شروع شد';
+                } else if (event.detail.status === 'object-placed') {
+                    status.textContent = 'مدل در محیط واقعی قرار گرفت';
+                } else if (event.detail.status === 'session-ended') {
+                    status.textContent = 'جلسه AR به پایان رسید';
+                }
+            });
+
+            // تنظیم نقاط تعاملی
+            const hotspots = document.querySelectorAll('.hotspot');
+            hotspots.forEach(hotspot => {
+                hotspot.addEventListener('click', (e) => {
+                    const infoType = e.target.dataset.info;
+                    const info = hotspotInfo[infoType];
+                    
+                    if (info) {
+                        infoContent.innerHTML = `
+                            <h4>${info.title}</h4>
+                            <p>${info.content}</p>
+                        `;
+                        infoPanel.classList.add('active');
+                        status.textContent = `نمایش اطلاعات: ${info.title}`;
+                    }
+                });
+            });
+
+            // بستن پنل اطلاعات با کلیک روی آن
+            infoPanel.addEventListener('click', () => {
+                infoPanel.classList.remove('active');
+                status.textContent = 'آماده برای تعامل';
             });
         }
 
@@ -231,6 +399,31 @@
         document.addEventListener('DOMContentLoaded', () => {
             detectDeviceAndSetModel();
             setupEventListeners();
+            
+            // بررسی پشتیبانی AR
+            if ('xr' in navigator) {
+                navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+                    if (supported) {
+                        document.getElementById('status').textContent = 'AR پشتیبانی می‌شود - آماده برای استفاده';
+                    } else {
+                        document.getElementById('status').textContent = 'AR پشتیبانی نمی‌شود - مود عادی فعال';
+                    }
+                });
+            }
+        });
+
+        // تنظیم responsive
+        window.addEventListener('resize', () => {
+            const modelViewer = document.getElementById('arModel');
+            modelViewer.jumpCameraToGoal();
+        });
+
+        // تنظیم orientation
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                const modelViewer = document.getElementById('arModel');
+                modelViewer.jumpCameraToGoal();
+            }, 100);
         });
     </script>
 </body>
