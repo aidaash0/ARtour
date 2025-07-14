@@ -1,573 +1,273 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Portal Experience</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.0/aframe.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/AR.js/3.4.5/aframe-ar.js"></script>
+    <title>AR Virtual Tour - تور مجازی واقعیت افزوده</title>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #000;
-            overflow: hidden;
-        }
-        
-        #ui-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
+            padding: 0;
             box-sizing: border-box;
         }
-        
-        .ui-panel {
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            pointer-events: auto;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
             text-align: center;
-            max-width: 300px;
-        }
-        
-        .status-panel {
-            background: rgba(0, 50, 100, 0.9);
-        }
-        
-        .instruction-panel {
-            background: rgba(50, 50, 50, 0.9);
-            font-size: 14px;
-        }
-        
-        .ar-button {
-            background: #4CAF50;
             color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 10px;
-            pointer-events: auto;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
-        
-        .ar-button:hover {
-            background: #45a049;
-            transform: scale(1.05);
+
+        .ar-viewer {
+            width: 100%;
+            height: 600px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
         }
-        
-        .ar-button:disabled {
-            background: #666;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .ar-button:active {
-            transform: scale(0.95);
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        #ar-scene {
+
+        model-viewer {
             width: 100%;
             height: 100%;
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            border-radius: 15px;
         }
-        
-        .crosshair {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            border: 2px solid white;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 999;
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
-        
-        .crosshair::before {
-            content: '';
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            text-align: center;
+            color: white;
+            margin-top: 15px;
+            font-size: 1.1em;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            color: white;
+            text-align: center;
+        }
+
+        .device-info {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 4px;
-            height: 4px;
-            background: white;
-            border-radius: 50%;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .ar-viewer {
+                height: 400px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="ui-overlay">
-        <div class="ui-panel status-panel">
-            <div id="status-text">Starting AR Portal...</div>
+    <div class="container">
+        <h1>🏠 تور مجازی واقعیت افزوده</h1>
+        
+        <div class="ar-viewer">
+            <div class="device-info" id="deviceInfo">در حال تشخیص دستگاه...</div>
+            
+            <model-viewer
+                id="arModel"
+                camera-controls
+                ar
+                ar-modes="webxr scene-viewer quick-look"
+                ar-scale="fixed"
+                ar-placement="floor"
+                environment-image="neutral"
+                shadow-intensity="1"
+                loading="lazy"
+                poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='150'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='300' height='150' fill='url(%23grad)' /%3E%3Ctext x='150' y='75' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='16' font-family='Arial'%3Eدر حال بارگذاری مدل...%3C/text%3E%3C/svg%3E">
+            </model-viewer>
         </div>
         
-        <div class="ui-panel instruction-panel">
-            <p>🚪 Point camera at flat surface</p>
-            <p>👆 Tap screen to place portal</p>
-            <p>🚶 Walk close to door to enter</p>
-            <button id="start-ar-btn" class="ar-button">Start AR Experience</button>
-            <button id="place-portal-btn" class="ar-button hidden">Place Portal Here</button>
-            <button id="exit-portal-btn" class="ar-button hidden">Exit Portal</button>
+        <div class="controls">
+            <button class="btn" id="arButton">📱 مشاهده در AR</button>
+            <button class="btn" id="resetCamera">🔄 بازنشانی دوربین</button>
+        </div>
+        
+        <div class="status" id="status">آماده برای نمایش</div>
+        
+        <div class="instructions">
+            <h3>📋 راهنمای استفاده</h3>
+            <p>• روی دکمه "مشاهده در AR" کلیک کنید</p>
+            <p>• با گوشی خود در محیط حرکت کنید</p>
+            <p>• مدل با مقیاس ثابت در محیط واقعی نمایش داده می‌شود</p>
         </div>
     </div>
 
-    <div id="crosshair" class="crosshair hidden"></div>
-
-    <a-scene 
-        id="ar-scene"
-        embedded
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-        vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false"
-        renderer="logarithmicDepthBuffer: true; colorManagement: true; sortObjects: true;"
-        background="color: #000000; transparent: true">
-        
-        <!-- Camera -->
-        <a-entity 
-            id="camera-rig"
-            position="0 1.6 0">
-            <a-camera
-                id="ar-camera"
-                look-controls="enabled: true"
-                wasd-controls="enabled: false"
-                position="0 0 0"
-                rotation="0 0 0">
-            </a-camera>
-        </a-entity>
-        
-        <!-- Lighting -->
-        <a-light type="ambient" intensity="0.6" color="#ffffff"></a-light>
-        <a-light type="directional" intensity="0.8" position="2 4 2"></a-light>
-        
-        <!-- Portal Container -->
-        <a-entity id="portal-container" visible="false">
-            <!-- Portal Frame -->
-            <a-entity id="portal-frame">
-                <!-- Door Frame Structure -->
-                <a-box 
-                    id="door-left"
-                    width="0.15" height="2.5" depth="0.3"
-                    color="#654321"
-                    position="-0.9 1.25 0"
-                    material="roughness: 0.8; metalness: 0.1">
-                </a-box>
-                
-                <a-box 
-                    id="door-right"
-                    width="0.15" height="2.5" depth="0.3"
-                    color="#654321"
-                    position="0.9 1.25 0"
-                    material="roughness: 0.8; metalness: 0.1">
-                </a-box>
-                
-                <a-box 
-                    id="door-top"
-                    width="1.8" height="0.15" depth="0.3"
-                    color="#654321"
-                    position="0 2.5 0"
-                    material="roughness: 0.8; metalness: 0.1">
-                </a-box>
-                
-                <!-- Portal Opening -->
-                <a-plane 
-                    id="portal-opening"
-                    width="1.8" height="2.5"
-                    position="0 1.25 0"
-                    material="color: #1a1a2e; opacity: 0.8; transparent: true"
-                    animation="property: material.opacity; to: 0.3; dur: 2000; loop: true; dir: alternate">
-                </a-plane>
-                
-                <!-- Trigger Zone -->
-                <a-box 
-                    id="portal-trigger"
-                    width="2" height="2.5" depth="1"
-                    position="0 1.25 0"
-                    material="opacity: 0; transparent: true; visible: false">
-                </a-box>
-            </a-entity>
-        </a-entity>
-        
-        <!-- Room Container -->
-        <a-entity 
-            id="room-container"
-            visible="false"
-            position="0 0 0">
-            
-            <!-- Room Model Placeholder -->
-            <a-entity 
-                id="room-model"
-                position="0 0 0">
-            </a-entity>
-            
-            <!-- Room Lights -->
-            <a-light type="point" intensity="1" position="0 2.5 0" color="#ffaa77"></a-light>
-            <a-light type="point" intensity="0.8" position="2 2 2" color="#ffffff"></a-light>
-            <a-light type="point" intensity="0.8" position="-2 2 -2" color="#ffffff"></a-light>
-        </a-entity>
-    </a-scene>
-
     <script>
-        console.log('Script loading...');
-        console.log('THREE defined:', typeof THREE !== 'undefined');
-        
-        // App state
-        let app = {
-            isPortalPlaced: false,
-            isInPortal: false,
-            isArStarted: false,
-            userPosition: new THREE.Vector3(),
-            portalPosition: new THREE.Vector3(),
-            scene: null,
-            camera: null,
-            isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
-            proximityTimer: null
-        };
-
-        // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM ready, initializing...');
+        // تشخیص نوع دستگاه و انتخاب مدل مناسب
+        function detectDeviceAndSetModel() {
+            const modelViewer = document.getElementById('arModel');
+            const deviceInfo = document.getElementById('deviceInfo');
             
-            // Get references
-            app.scene = document.querySelector('#ar-scene');
-            app.camera = document.querySelector('#ar-camera');
+            // تشخیص iOS
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             
-            // Setup button events
-            setupButtons();
-            
-            // Wait for A-Frame to load
-            if (app.scene.hasLoaded) {
-                onSceneReady();
+            if (isIOS) {
+                // برای iOS از فرمت USDZ استفاده کنید
+                modelViewer.src = 'labusdz.usdz';
+                modelViewer.setAttribute('ios-src', 'labusdz.usdz');
+                deviceInfo.textContent = 'iOS - مدل USDZ';
             } else {
-                app.scene.addEventListener('loaded', onSceneReady);
+                // برای Android و سایر دستگاه‌ها از فرمت GLB استفاده کنید
+                modelViewer.src = 'labglb.glb';
+                deviceInfo.textContent = 'Android/Web - مدل GLB';
             }
-        });
+        }
 
-        function setupButtons() {
-            console.log('Setting up buttons...');
-            
-            const startBtn = document.getElementById('start-ar-btn');
-            const placeBtn = document.getElementById('place-portal-btn');
-            const exitBtn = document.getElementById('exit-portal-btn');
-            
-            startBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Start AR button clicked');
-                startARExperience();
+        // تنظیم رویدادها
+        function setupEventListeners() {
+            const modelViewer = document.getElementById('arModel');
+            const arButton = document.getElementById('arButton');
+            const resetCamera = document.getElementById('resetCamera');
+            const status = document.getElementById('status');
+
+            // دکمه AR
+            arButton.addEventListener('click', () => {
+                try {
+                    if (modelViewer.canActivateAR) {
+                        modelViewer.activateAR();
+                        status.textContent = 'AR فعال شد - با گوشی حرکت کنید';
+                    } else {
+                        status.textContent = 'AR در این دستگاه پشتیبانی نمی‌شود';
+                    }
+                } catch (error) {
+                    console.error('AR Error:', error);
+                    status.textContent = 'خطا در فعال‌سازی AR';
+                }
             });
-            
-            placeBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Place portal button clicked');
-                placePortalAtCenter();
+
+            // بازنشانی دوربین
+            resetCamera.addEventListener('click', () => {
+                modelViewer.resetTurntableRotation();
+                status.textContent = 'دوربین بازنشانی شد';
             });
-            
-            exitBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Exit portal button clicked');
-                exitPortal();
+
+            // رویدادهای مدل
+            modelViewer.addEventListener('load', () => {
+                status.textContent = 'مدل بارگذاری شد - آماده برای AR';
+                console.log('Model loaded successfully');
             });
-            
-            // Screen tap for portal placement
-            app.scene.addEventListener('click', function(e) {
-                if (app.isArStarted && !app.isPortalPlaced) {
-                    console.log('Screen tapped for portal placement');
-                    placePortalAtCenter();
+
+            modelViewer.addEventListener('error', (event) => {
+                status.textContent = 'خطا در بارگذاری مدل - لطفاً URL مدل را بررسی کنید';
+                console.error('Model loading error:', event.detail);
+            });
+
+            modelViewer.addEventListener('ar-status', (event) => {
+                console.log('AR Status:', event.detail.status);
+                if (event.detail.status === 'session-started') {
+                    status.textContent = 'جلسه AR شروع شد';
+                } else if (event.detail.status === 'object-placed') {
+                    status.textContent = 'مدل در محیط واقعی قرار گرفت';
+                } else if (event.detail.status === 'session-ended') {
+                    status.textContent = 'جلسه AR به پایان رسید';
+                } else if (event.detail.status === 'failed') {
+                    status.textContent = 'خطا در AR - دوباره تلاش کنید';
                 }
             });
         }
 
-        function onSceneReady() {
-            console.log('A-Frame scene ready');
-            updateStatus('Ready to start AR');
+        // تنظیم اولیه
+        document.addEventListener('DOMContentLoaded', () => {
+            detectDeviceAndSetModel();
+            setupEventListeners();
             
-            // Create room model
-            createRoomModel();
-        }
-
-        function startARExperience() {
-            console.log('Starting AR experience...');
-            
-            // Request camera permission
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true })
-                    .then(function(stream) {
-                        console.log('Camera permission granted');
-                        stream.getTracks().forEach(track => track.stop()); // Stop the test stream
-                        
-                        app.isArStarted = true;
-                        updateStatus('AR Active - Tap screen to place portal');
-                        
-                        // Update UI
-                        document.getElementById('start-ar-btn').classList.add('hidden');
-                        document.getElementById('place-portal-btn').classList.remove('hidden');
-                        document.getElementById('crosshair').classList.remove('hidden');
-                        
-                        // Start proximity checking
-                        startProximityCheck();
-                    })
-                    .catch(function(error) {
-                        console.error('Camera access denied:', error);
-                        updateStatus('Camera access required for AR');
-                    });
-            } else {
-                console.warn('getUserMedia not supported, continuing anyway');
-                app.isArStarted = true;
-                updateStatus('AR Active - Tap screen to place portal');
-                document.getElementById('start-ar-btn').classList.add('hidden');
-                document.getElementById('place-portal-btn').classList.remove('hidden');
-                document.getElementById('crosshair').classList.remove('hidden');
-                startProximityCheck();
-            }
-        }
-
-        function placePortalAtCenter() {
-            if (app.isPortalPlaced) return;
-            
-            console.log('Placing portal...');
-            
-            // Get camera position and direction
-            const cameraEl = app.camera;
-            const cameraPos = cameraEl.getAttribute('position');
-            const cameraRot = cameraEl.getAttribute('rotation');
-            
-            // Calculate position 3 meters in front of camera
-            const direction = new THREE.Vector3(0, 0, -3);
-            const euler = new THREE.Euler(
-                THREE.MathUtils.degToRad(cameraRot.x),
-                THREE.MathUtils.degToRad(cameraRot.y),
-                THREE.MathUtils.degToRad(cameraRot.z)
-            );
-            direction.applyEuler(euler);
-            
-            const portalPos = new THREE.Vector3(
-                cameraPos.x + direction.x,
-                0, // Keep on ground
-                cameraPos.z + direction.z
-            );
-            
-            app.portalPosition.copy(portalPos);
-            app.isPortalPlaced = true;
-            
-            // Position and show portal
-            const portalContainer = document.querySelector('#portal-container');
-            portalContainer.setAttribute('position', `${portalPos.x} ${portalPos.y} ${portalPos.z}`);
-            portalContainer.setAttribute('visible', true);
-            
-            // Update UI
-            updateStatus('Portal placed! Walk close to enter');
-            document.getElementById('place-portal-btn').classList.add('hidden');
-            document.getElementById('crosshair').classList.add('hidden');
-        }
-
-        function startProximityCheck() {
-            app.proximityTimer = setInterval(function() {
-                if (app.isPortalPlaced && !app.isInPortal) {
-                    checkPortalProximity();
+            // تاخیر کوتاه برای اطمینان از بارگذاری کامل
+            setTimeout(() => {
+                const modelViewer = document.getElementById('arModel');
+                const status = document.getElementById('status');
+                
+                if (modelViewer.src) {
+                    status.textContent = 'در حال بارگذاری مدل...';
+                } else {
+                    status.textContent = 'خطا: مدل تنظیم نشده';
                 }
-            }, 500);
-        }
-
-        function checkPortalProximity() {
-            // Get current camera position
-            const cameraPos = app.camera.getAttribute('position');
-            app.userPosition.set(cameraPos.x, cameraPos.y, cameraPos.z);
-            
-            const distance = app.userPosition.distanceTo(app.portalPosition);
-            
-            if (distance < 2.5) {
-                console.log('Close to portal, entering...');
-                enterPortal();
-            }
-        }
-
-        function enterPortal() {
-            if (app.isInPortal) return;
-            
-            console.log('Entering portal...');
-            app.isInPortal = true;
-            
-            // Stop proximity checking
-            if (app.proximityTimer) {
-                clearInterval(app.proximityTimer);
-                app.proximityTimer = null;
-            }
-            
-            updateStatus('Entering portal world...');
-            
-            // Transition effect
-            setTimeout(function() {
-                // Hide portal, show room
-                document.querySelector('#portal-container').setAttribute('visible', false);
-                document.querySelector('#room-container').setAttribute('visible', true);
-                
-                // Position camera in room
-                const cameraRig = document.querySelector('#camera-rig');
-                cameraRig.setAttribute('position', '0 1.6 2');
-                
-                // Enable movement controls
-                app.camera.setAttribute('wasd-controls', 'enabled: true');
-                
-                // Update UI
-                updateStatus('Welcome to the portal world!');
-                document.getElementById('exit-portal-btn').classList.remove('hidden');
-                
             }, 1000);
-        }
-
-        function exitPortal() {
-            console.log('Exiting portal...');
-            app.isInPortal = false;
-            
-            // Hide room, show portal
-            document.querySelector('#room-container').setAttribute('visible', false);
-            document.querySelector('#portal-container').setAttribute('visible', true);
-            
-            // Reset camera
-            const cameraRig = document.querySelector('#camera-rig');
-            cameraRig.setAttribute('position', '0 1.6 0');
-            app.camera.setAttribute('wasd-controls', 'enabled: false');
-            
-            // Update UI
-            updateStatus('Back in AR world');
-            document.getElementById('exit-portal-btn').classList.add('hidden');
-            
-            // Restart proximity checking
-            startProximityCheck();
-        }
-
-        function createRoomModel() {
-            console.log('Creating room model...');
-            
-            const roomModel = document.querySelector('#room-model');
-            
-            // Try to load user's GLB model first
-            const modelSrc = app.isIOS ? 'modelusdz.usdz' : 'modelglb.glb';
-            
-            // For now, create fallback room (you can uncomment GLB loading later)
-            createFallbackRoom(roomModel);
-            
-            /* Uncomment this when you have your GLB model:
-            if (!app.isIOS) {
-                loadGLBModel(modelSrc, roomModel);
-            } else {
-                createFallbackRoom(roomModel);
-            }
-            */
-        }
-
-        function createFallbackRoom(container) {
-            console.log('Creating fallback room...');
-            
-            // Room walls
-            const wallMaterial = 'color: #f0f0f0; roughness: 0.8;';
-            const floorMaterial = 'color: #8B4513; roughness: 0.9;';
-            
-            // Floor
-            const floor = document.createElement('a-plane');
-            floor.setAttribute('width', '8');
-            floor.setAttribute('height', '8');
-            floor.setAttribute('rotation', '-90 0 0');
-            floor.setAttribute('position', '0 0 0');
-            floor.setAttribute('material', floorMaterial);
-            container.appendChild(floor);
-            
-            // Ceiling
-            const ceiling = document.createElement('a-plane');
-            ceiling.setAttribute('width', '8');
-            ceiling.setAttribute('height', '8');
-            ceiling.setAttribute('rotation', '90 0 0');
-            ceiling.setAttribute('position', '0 3 0');
-            ceiling.setAttribute('material', wallMaterial);
-            container.appendChild(ceiling);
-            
-            // Back wall
-            const backWall = document.createElement('a-plane');
-            backWall.setAttribute('width', '8');
-            backWall.setAttribute('height', '3');
-            backWall.setAttribute('position', '0 1.5 -4');
-            backWall.setAttribute('material', wallMaterial);
-            container.appendChild(backWall);
-            
-            // Left wall
-            const leftWall = document.createElement('a-plane');
-            leftWall.setAttribute('width', '8');
-            leftWall.setAttribute('height', '3');
-            leftWall.setAttribute('position', '-4 1.5 0');
-            leftWall.setAttribute('rotation', '0 90 0');
-            leftWall.setAttribute('material', wallMaterial);
-            container.appendChild(leftWall);
-            
-            // Right wall
-            const rightWall = document.createElement('a-plane');
-            rightWall.setAttribute('width', '8');
-            rightWall.setAttribute('height', '3');
-            rightWall.setAttribute('position', '4 1.5 0');
-            rightWall.setAttribute('rotation', '0 -90 0');
-            rightWall.setAttribute('material', wallMaterial);
-            container.appendChild(rightWall);
-            
-            // Add furniture
-            const furnitureMaterial = 'color: #654321; roughness: 0.7;';
-            
-            // Table
-            const table = document.createElement('a-box');
-            table.setAttribute('width', '2');
-            table.setAttribute('height', '0.8');
-            table.setAttribute('depth', '1');
-            table.setAttribute('position', '0 0.4 -1');
-            table.setAttribute('material', furnitureMaterial);
-            container.appendChild(table);
-            
-            // Chair
-            const chair = document.createElement('a-box');
-            chair.setAttribute('width', '0.6');
-            chair.setAttribute('height', '1.2');
-            chair.setAttribute('depth', '0.6');
-            chair.setAttribute('position', '0 0.6 0.5');
-            chair.setAttribute('material', furnitureMaterial);
-            container.appendChild(chair);
-            
-            // Bookshelf
-            const bookshelf = document.createElement('a-box');
-            bookshelf.setAttribute('width', '0.4');
-            bookshelf.setAttribute('height', '2');
-            bookshelf.setAttribute('depth', '1.5');
-            bookshelf.setAttribute('position', '-3 1 -2');
-            bookshelf.setAttribute('material', furnitureMaterial);
-            container.appendChild(bookshelf);
-            
-            console.log('Fallback room created');
-        }
-
-        function updateStatus(message) {
-            document.getElementById('status-text').textContent = message;
-            console.log('Status:', message);
-        }
-
-        // Error handling
-        window.addEventListener('error', function(e) {
-            console.error('Error:', e.error);
-            updateStatus('Error occurred - please refresh');
         });
     </script>
 </body>
