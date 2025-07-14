@@ -1,654 +1,253 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Portal Experience</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.0/aframe.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/AR.js/3.4.5/aframe-ar.js"></script>
+    <title>AR Portal with Stencil Buffer</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #000;
-            overflow: hidden;
-        }
-        
-        #ui-overlay {
-            position: fixed;
+        body { margin: 0; overflow: hidden; }
+        .arjs-loader {
+            height: 100%;
+            width: 100%;
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-            pointer-events: none;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
         }
-        
-        .ui-panel {
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            pointer-events: auto;
+        .arjs-loader div {
             text-align: center;
-            max-width: 300px;
-        }
-        
-        .status-panel {
-            background: rgba(0, 50, 100, 0.9);
-        }
-        
-        .instruction-panel {
-            background: rgba(50, 50, 50, 0.9);
-            font-size: 14px;
-        }
-        
-        .ar-button {
-            background: #4CAF50;
+            font-size: 1.25em;
             color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 10px;
-        }
-        
-        .ar-button:hover {
-            background: #45a049;
-            transform: scale(1.05);
-        }
-        
-        .ar-button:disabled {
-            background: #666;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .loading {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        .hidden {
-            display: none !important;
         }
     </style>
 </head>
 <body>
-    <div id="ui-overlay">
-        <div class="ui-panel status-panel">
-            <div id="status-text">Starting AR Portal...</div>
-        </div>
-        
-        <div class="ui-panel instruction-panel">
-            <p>🚪 Point your camera at a flat surface</p>
-            <p>👆 Tap to place the portal door</p>
-            <p>🚶 Walk through the door to enter</p>
-            <button id="start-ar-btn" class="ar-button">Start AR Experience</button>
-        </div>
+    <div class="arjs-loader">
+        <div>Loading, please wait...</div>
     </div>
 
-    <a-scene 
-        id="ar-scene"
-        embedded
+    <a-scene
+        vr-mode-ui="enabled: false;"
         arjs="sourceType: webcam; debugUIEnabled: false;"
-        vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false"
-        renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
-        ar-hit-test
-        cursor="rayOrigin: mouse; fuse: false">
-        
-        <!-- Assets -->
-        <a-assets>
-            <!-- Placeholder for your models -->
-            <a-asset-item id="room-model-glb" src="modelglb.glb"></a-asset-item>
-            <a-asset-item id="room-model-usdz" src="modelusdz.usdz"></a-asset-item>
-        </a-assets>
-        
-        <!-- Lights -->
-        <a-light type="ambient" intensity="0.5" color="#ffffff"></a-light>
-        <a-light type="directional" intensity="0.8" position="2 4 2" color="#ffffff"></a-light>
-        
-        <!-- AR Camera -->
-        <a-camera 
-            id="ar-camera"
-            look-controls="enabled: true; magicWindowTrackingEnabled: true"
-            wasd-controls="enabled: false"
-            position="0 1.6 0"
-            camera-controls>
-            
-            <!-- Reticle for placement -->
-            <a-ring 
-                id="reticle"
-                radius-inner="0.015"
-                radius-outer="0.025"
-                color="#ffffff"
-                opacity="0.9"
-                position="0 0 -1.5"
-                visible="true">
-                <a-animation
-                    attribute="rotation"
-                    to="0 0 360"
-                    dur="2000"
-                    repeat="indefinite"
-                    easing="linear">
-                </a-animation>
-            </a-ring>
-        </a-camera>
-        
-        <!-- Portal Container -->
-        <a-entity id="portal-container" visible="false">
-            <!-- Portal Frame -->
-            <a-entity 
-                id="portal-frame"
-                position="0 0 -3"
-                portal-frame>
-                
-                <!-- Door Frame -->
-                <a-entity id="door-frame-group">
-                    <!-- Left Frame -->
-                    <a-box 
-                        width="0.1" height="3" depth="0.3"
-                        color="#8B4513"
-                        position="-1 1.5 0"
-                        material="roughness: 0.8; metalness: 0.2">
-                    </a-box>
-                    
-                    <!-- Right Frame -->
-                    <a-box 
-                        width="0.1" height="3" depth="0.3"
-                        color="#8B4513"
-                        position="1 1.5 0"
-                        material="roughness: 0.8; metalness: 0.2">
-                    </a-box>
-                    
-                    <!-- Top Frame -->
-                    <a-box 
-                        width="2" height="0.1" depth="0.3"
-                        color="#8B4513"
-                        position="0 3 0"
-                        material="roughness: 0.8; metalness: 0.2">
-                    </a-box>
-                    
-                    <!-- Door Opening Detection -->
-                    <a-box 
-                        id="door-trigger"
-                        width="1.8" height="2.8" depth="0.5"
-                        material="opacity: 0; transparent: true; visible: false"
-                        position="0 1.4 0"
-                        door-trigger>
-                    </a-box>
+        renderer="logarithmicDepthBuffer: true;"
+    >
+        <a-marker preset="hiro">
+            <a-entity id="portal-frame"
+                position="0 0.001 0"
+                rotation="-90 0 0"
+                scale="1 1 1"
+                visible="true"
+                portal-renderer
+            >
+                <a-plane
+                    id="stencil-plane"
+                    width="1"
+                    height="1"
+                    position="0 0 0.001"
+                    material="color: black; transparent: true; opacity: 0;"
+                ></a-plane>
+
+                <a-entity id="inner-world-container" visible="false">
+                    <a-box position="0 0.5 -1" color="#FF0000"></a-box>
+                    <a-sphere position="0.5 0.75 -1.5" radius="0.4" color="#00FF00"></a-sphere>
+                    <a-cylinder position="-0.5 0.3 -0.5" radius="0.3" height="0.6" color="#0000FF"></a-cylinder>
+                    <a-plane position="0 0 -1" rotation="-90 0 0" width="2" height="2" color="#AAAAAA"></a-plane>
                 </a-entity>
-                
-                <!-- Portal View (Stencil Buffer) -->
-                <a-plane 
-                    id="portal-view"
-                    width="1.8" height="2.8"
-                    position="0 1.4 0.01"
-                    material="shader: portal; transparent: true; opacity: 0.1"
-                    portal-view>
-                </a-plane>
             </a-entity>
-        </a-entity>
-        
-        <!-- Room Model Container -->
-        <a-entity 
-            id="room-container"
-            visible="false"
-            position="0 0 -50">
-            
-            <a-entity 
-                id="room-model"
-                room-loader
-                position="0 0 0"
-                scale="1 1 1">
-            </a-entity>
-            
-            <!-- Interior lighting -->
-            <a-light type="point" intensity="0.8" position="0 2 0" color="#ffaa77"></a-light>
-            <a-light type="point" intensity="0.6" position="2 2 2" color="#ffffff"></a-light>
-            <a-light type="point" intensity="0.6" position="-2 2 -2" color="#ffffff"></a-light>
-        </a-entity>
-        
-        <!-- Hit test plane (invisible) -->
-        <a-plane 
-            id="hit-test-plane"
-            width="100" height="100"
-            rotation="-90 0 0"
-            position="0 0 0"
-            material="opacity: 0; transparent: true; visible: false"
-            hit-test>
-        </a-plane>
+        </a-marker>
+
+        <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        // Global app state
-        let app = {
-            isPortalPlaced: false,
-            isInPortal: false,
-            userPosition: new THREE.Vector3(),
-            portalPosition: new THREE.Vector3(),
-            scene: null,
-            camera: null,
-            isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
-            isAndroid: /Android/.test(navigator.userAgent)
-        };
+        AFRAME.registerComponent('portal-renderer', {
+            init: function () {
+                const el = this.el;
+                const sceneEl = el.sceneEl;
+                const renderer = sceneEl.renderer;
+                const camera = sceneEl.camera;
 
-        // Wait for A-Frame to load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing AR Portal...');
-            
-            app.scene = document.querySelector('#ar-scene');
-            app.camera = document.querySelector('#ar-camera');
-            
-            // Initialize components
-            initializeComponents();
-            
-            // Setup event listeners
-            setupEventListeners();
-            
-            // Start AR when scene is ready
-            app.scene.addEventListener('loaded', function() {
-                console.log('A-Frame scene loaded');
-                updateStatus('Ready - Tap Start AR');
-            });
-        });
+                // Three.js elements
+                const portalFrame = el.object3D;
+                const stencilPlaneMesh = document.getElementById('stencil-plane').getObject3D('mesh');
+                const innerWorldContainer = document.getElementById('inner-world-container').object3D;
 
-        function initializeComponents() {
-            // Camera Controls Component
-            AFRAME.registerComponent('camera-controls', {
-                init: function() {
-                    this.el.addEventListener('componentchanged', (e) => {
-                        if (e.detail.name === 'position') {
-                            const pos = this.el.getAttribute('position');
-                            app.userPosition.set(pos.x, pos.y, pos.z);
-                            checkPortalProximity();
-                        }
-                    });
-                }
-            });
+                // --- 1. Set up the inner scene's camera and render target ---
+                this.innerCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.innerRenderTarget = new THREE.WebGLRenderTarget(
+                    window.innerWidth,
+                    window.innerHeight,
+                    { stencilBuffer: true, depthBuffer: true } // Ensure stencil buffer is enabled for the render target
+                );
 
-            // Hit Test Component
-            AFRAME.registerComponent('hit-test', {
-                init: function() {
-                    this.el.addEventListener('click', (e) => {
-                        if (!app.isPortalPlaced && e.detail.intersection) {
-                            placePortal(e.detail.intersection.point);
-                        }
-                    });
-                }
-            });
+                // --- 2. Configure the stencil plane ---
+                // This plane will write to the stencil buffer, creating the "hole"
+                stencilPlaneMesh.material.colorWrite = false; // Don't write color
+                stencilPlaneMesh.material.depthWrite = false; // Don't write depth
 
-            // Portal Frame Component
-            AFRAME.registerComponent('portal-frame', {
-                init: function() {
-                    console.log('Portal frame component initialized');
-                }
-            });
+                // Configure stencil operations for the stencil plane
+                stencilPlaneMesh.onBeforeRender = function (renderer) {
+                    renderer.clearDepth(); // Clear depth before rendering stencil mask
+                    renderer.clearStencil(); // Clear stencil buffer
 
-            // Door Trigger Component
-            AFRAME.registerComponent('door-trigger', {
-                init: function() {
-                    this.el.addEventListener('triggerenter', () => {
-                        enterPortal();
-                    });
-                }
-            });
+                    renderer.state.setStencilTest(true);
+                    renderer.state.setStencilFunc(THREE.AlwaysStencilFunc, 1, 0xFF); // Always pass, write 1
+                    renderer.state.setStencilOp(THREE.ReplaceStencilOp, THREE.ReplaceStencilOp, THREE.ReplaceStencilOp); // Replace stencil value with 1
+                    renderer.state.setStencilWriteMask(0xFF);
+                };
 
-            // Portal View Component
-            AFRAME.registerComponent('portal-view', {
-                init: function() {
-                    console.log('Portal view component initialized');
-                }
-            });
+                stencilPlaneMesh.onAfterRender = function (renderer) {
+                    // After rendering the stencil plane, configure the inner world to only render where stencil is 1
+                    renderer.state.setStencilFunc(THREE.EqualStencilFunc, 1, 0xFF); // Only pass if stencil value is 1
+                    renderer.state.setStencilOp(THREE.KeepStencilOp, THREE.KeepStencilOp, THREE.KeepStencilOp); // Keep stencil value
+                    renderer.state.setStencilWriteMask(0x00); // Don't write to stencil for inner world objects
+                    renderer.state.setStencilTest(false); // Reset stencil test for normal rendering
+                };
 
-            // Room Loader Component
-            AFRAME.registerComponent('room-loader', {
-                init: function() {
-                    this.loadRoom();
-                },
-                
-                loadRoom: function() {
-                    console.log('Loading room model...');
-                    
-                    // Try to load user's model first
-                    const modelSrc = app.isIOS ? './room.usdz' : './room.glb';
-                    
-                    if (app.isIOS) {
-                        // For iOS, create fallback room (USDZ support is limited in browsers)
-                        this.createFallbackRoom();
-                    } else {
-                        // Try to load GLB model
-                        this.loadGLBModel(modelSrc);
-                    }
-                },
-                
-                loadGLBModel: function(src) {
-                    const loader = new THREE.GLTFLoader();
-                    loader.load(
-                        src,
-                        (gltf) => {
-                            console.log('GLB model loaded successfully');
-                            this.el.setObject3D('mesh', gltf.scene);
-                            this.setupModelMaterials(gltf.scene);
-                        },
-                        (progress) => {
-                            console.log('Loading progress:', (progress.loaded / progress.total) * 100 + '%');
-                        },
-                        (error) => {
-                            console.warn('Could not load GLB model, creating fallback:', error);
-                            this.createFallbackRoom();
-                        }
-                    );
-                },
-                
-                setupModelMaterials: function(model) {
-                    model.traverse((child) => {
-                        if (child.isMesh) {
-                            child.material.side = THREE.DoubleSide;
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
-                },
-                
-                createFallbackRoom: function() {
-                    console.log('Creating fallback room...');
-                    const roomGroup = new THREE.Group();
-                    
-                    // Room dimensions
-                    const roomWidth = 6;
-                    const roomHeight = 3;
-                    const roomDepth = 6;
-                    
-                    // Materials
-                    const wallMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0xf0f0f0,
-                        side: THREE.DoubleSide 
-                    });
-                    const floorMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x8B4513,
-                        side: THREE.DoubleSide 
-                    });
-                    
-                    // Create floor
-                    const floorGeometry = new THREE.PlaneGeometry(roomWidth, roomDepth);
-                    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-                    floor.rotation.x = -Math.PI / 2;
-                    floor.position.y = 0;
-                    roomGroup.add(floor);
-                    
-                    // Create ceiling
-                    const ceiling = new THREE.Mesh(floorGeometry, wallMaterial);
-                    ceiling.rotation.x = Math.PI / 2;
-                    ceiling.position.y = roomHeight;
-                    roomGroup.add(ceiling);
-                    
-                    // Create walls
-                    const wallGeometry = new THREE.PlaneGeometry(roomWidth, roomHeight);
-                    
-                    // Back wall
-                    const backWall = new THREE.Mesh(wallGeometry, wallMaterial);
-                    backWall.position.set(0, roomHeight/2, -roomDepth/2);
-                    roomGroup.add(backWall);
-                    
-                    // Left wall
-                    const leftWall = new THREE.Mesh(wallGeometry, wallMaterial);
-                    leftWall.rotation.y = Math.PI / 2;
-                    leftWall.position.set(-roomWidth/2, roomHeight/2, 0);
-                    roomGroup.add(leftWall);
-                    
-                    // Right wall
-                    const rightWall = new THREE.Mesh(wallGeometry, wallMaterial);
-                    rightWall.rotation.y = -Math.PI / 2;
-                    rightWall.position.set(roomWidth/2, roomHeight/2, 0);
-                    roomGroup.add(rightWall);
-                    
-                    // Add some furniture
-                    const furnitureMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
-                    
-                    // Table
-                    const tableGeometry = new THREE.BoxGeometry(1.5, 0.8, 0.8);
-                    const table = new THREE.Mesh(tableGeometry, furnitureMaterial);
-                    table.position.set(0, 0.4, -1);
-                    roomGroup.add(table);
-                    
-                    // Chair
-                    const chairGeometry = new THREE.BoxGeometry(0.5, 1, 0.5);
-                    const chair = new THREE.Mesh(chairGeometry, furnitureMaterial);
-                    chair.position.set(0, 0.5, 0);
-                    roomGroup.add(chair);
-                    
-                    // Bookshelf
-                    const shelfGeometry = new THREE.BoxGeometry(0.3, 2, 1.5);
-                    const shelf = new THREE.Mesh(shelfGeometry, furnitureMaterial);
-                    shelf.position.set(-2, 1, -2);
-                    roomGroup.add(shelf);
-                    
-                    this.el.setObject3D('mesh', roomGroup);
-                    console.log('Fallback room created successfully');
-                }
-            });
+                // Add the inner world container to the marker's object3D.
+                // We'll manage its visibility and rendering manually.
+                portalFrame.add(innerWorldContainer);
 
-            // Portal Shader
-            AFRAME.registerShader('portal', {
-                schema: {
-                    opacity: { type: 'number', default: 0.1 }
-                },
-                init: function(data) {
-                    this.material = new THREE.MeshBasicMaterial({
-                        color: 0x4444ff,
-                        transparent: true,
-                        opacity: data.opacity,
-                        side: THREE.DoubleSide
-                    });
-                }
-            });
-        }
+                // Hide inner world initially, we'll draw it to the render target
+                innerWorldContainer.visible = false;
 
-        function setupEventListeners() {
-            // Start AR button
-            document.getElementById('start-ar-btn').addEventListener('click', startAR);
-            
-            // Scene click for portal placement
-            app.scene.addEventListener('click', handleSceneClick);
-            
-            // Touch events for mobile
-            app.scene.addEventListener('touchstart', handleSceneClick);
-        }
+                // --- 3. Custom render loop for the portal ---
+                this.tick = function () {
+                    // Get current camera world position and quaternion
+                    const worldPos = new THREE.Vector3();
+                    const worldQuat = new THREE.Quaternion();
+                    camera.getWorldPosition(worldPos);
+                    camera.getWorldQuaternion(worldQuat);
 
-        function startAR() {
-            console.log('Starting AR experience...');
-            updateStatus('AR Started - Point at surface and tap');
-            
-            // Show reticle
-            document.querySelector('#reticle').setAttribute('visible', true);
-            
-            // Hide start button
-            document.getElementById('start-ar-btn').classList.add('hidden');
-        }
+                    // Position the inner camera relative to the portal
+                    // This is crucial: the inner camera should be as if it's looking from *inside* the portal
+                    // relative to the main camera's view of the portal.
+                    // For a simple planar portal, the inner camera essentially mirrors the main camera's
+                    // position and rotation relative to the portal frame.
+                    const portalWorldPos = new THREE.Vector3();
+                    const portalWorldQuat = new THREE.Quaternion();
+                    portalFrame.getWorldPosition(portalWorldPos);
+                    portalFrame.getWorldQuaternion(portalWorldQuat);
 
-        function handleSceneClick(event) {
-            if (app.isPortalPlaced) return;
-            
-            event.preventDefault();
-            
-            // Get click position
-            const canvas = app.scene.canvas;
-            const rect = canvas.getBoundingClientRect();
-            
-            let clientX, clientY;
-            if (event.touches) {
-                clientX = event.touches[0].clientX;
-                clientY = event.touches[0].clientY;
-            } else {
-                clientX = event.clientX;
-                clientY = event.clientY;
+                    // Transform camera position to be relative to the portal frame
+                    const cameraLocalPos = portalFrame.worldToLocal(worldPos.clone());
+                    this.innerCamera.position.copy(cameraLocalPos);
+
+                    // Transform camera rotation to be relative to the portal frame
+                    this.innerCamera.quaternion.copy(worldQuat);
+                    this.innerCamera.quaternion.premultiply(portalWorldQuat.invert()); // Adjust for portal's orientation
+                    // Invert the Z-axis for the portal "depth" effect if needed.
+                    // This creates the illusion of looking "through" to another world.
+                    this.innerCamera.rotation.y += Math.PI; // Rotate 180 degrees around Y for mirrored effect
+                    this.innerCamera.position.z *= -1; // Mirror Z position
+
+                    this.innerCamera.updateMatrixWorld();
+
+                    // --- Render the inner world to the render target ---
+                    renderer.setRenderTarget(this.innerRenderTarget);
+                    renderer.state.buffers.depth.setMask(true); // Ensure depth buffer is writable
+                    renderer.clear();
+                    renderer.render(innerWorldContainer, this.innerCamera); // Render inner world with inner camera
+
+                    // --- Render the main scene (AR content) ---
+                    renderer.setRenderTarget(null); // Back to default framebuffer
+                    renderer.clearDepth(); // Clear depth for AR elements to render on top
+                };
+
+                // When the AR system detects the marker
+                sceneEl.addEventListener('arReady', () => {
+                    console.log("AR.js is ready!");
+                });
+
+                // Set up the scene's onBeforeRender to apply stencil logic
+                sceneEl.renderer.autoClear = false; // We will manually clear and control rendering
+
+                // Attach onBeforeRender to the Three.js scene object
+                // This ensures our custom rendering logic runs within the A-Frame render loop
+                sceneEl.renderer.setClearColor(0x000000, 0); // Transparent background for AR
+
+                const originalRender = sceneEl.renderer.render.bind(sceneEl.renderer);
+
+                sceneEl.renderer.render = (scene, camera) => {
+                    // Step 1: Render the stencil plane to mark the portal area
+                    renderer.state.buffers.color.setMask(false); // Don't write color
+                    renderer.state.buffers.depth.setMask(false); // Don't write depth
+                    renderer.state.setStencilTest(true);
+                    renderer.state.setStencilFunc(THREE.AlwaysStencilFunc, 1, 0xFF);
+                    renderer.state.setStencilOp(THREE.ReplaceStencilOp, THREE.ReplaceStencilOp, THREE.ReplaceStencilOp);
+                    renderer.state.setStencilWriteMask(0xFF);
+
+                    renderer.clear(true, true, true); // Clear color, depth, and stencil
+                    originalRender(stencilPlaneMesh, camera); // Render only the stencil plane
+
+                    // Step 2: Render the inner world using the render target and stencil
+                    renderer.state.buffers.color.setMask(true); // Write color again
+                    renderer.state.buffers.depth.setMask(true); // Write depth again
+                    renderer.state.setStencilFunc(THREE.EqualStencilFunc, 1, 0xFF); // Only render where stencil is 1
+                    renderer.state.setStencilOp(THREE.KeepStencilOp, THREE.KeepStencilOp, THREE.KeepStencilOp);
+                    renderer.state.setStencilWriteMask(0x00); // Don't write to stencil
+
+                    // Apply the render target texture to a plane that sits where the portal is
+                    stencilPlaneMesh.material.map = this.innerRenderTarget.texture;
+                    stencilPlaneMesh.material.opacity = 1; // Make it visible
+                    stencilPlaneMesh.material.needsUpdate = true; // Crucial to update material
+                    stencilPlaneMesh.material.side = THREE.DoubleSide; // Ensure it's visible from both sides
+
+                    originalRender(innerWorldContainer, this.innerCamera); // Render the inner world with its camera
+
+                    // Step 3: Render the rest of the AR scene (outer world)
+                    renderer.state.setStencilTest(false); // Disable stencil test for the rest of the scene
+                    renderer.state.setStencilWriteMask(0xFF); // Reset write mask
+
+                    originalRender(scene, camera); // Render the full A-Frame scene
+                };
+            },
+            update: function () {
+                // Component update logic if needed
+            },
+            tick: function () {
+                // Ensure the inner camera position is updated relative to the main camera and portal
+                // This will be called by A-Frame's tick loop
+                const el = this.el;
+                const sceneEl = el.sceneEl;
+                const camera = sceneEl.camera;
+                const portalFrame = el.object3D;
+                const innerWorldContainer = document.getElementById('inner-world-container').object3D;
+
+                if (!portalFrame || !innerWorldContainer || !camera || !this.innerCamera) return;
+
+                // Get world positions and rotations
+                const mainCameraWorldPos = new THREE.Vector3();
+                const mainCameraWorldQuat = new THREE.Quaternion();
+                camera.getWorldPosition(mainCameraWorldPos);
+                camera.getWorldQuaternion(mainCameraWorldQuat);
+
+                const portalFrameWorldPos = new THREE.Vector3();
+                const portalFrameWorldQuat = new THREE.Quaternion();
+                portalFrame.getWorldPosition(portalFrameWorldPos);
+                portalFrame.getWorldQuaternion(portalFrameWorldQuat);
+
+                // Calculate relative position and rotation of the main camera to the portal
+                const relativePos = mainCameraWorldPos.clone().sub(portalFrameWorldPos);
+                const relativeQuat = mainCameraWorldQuat.clone().multiply(portalFrameWorldQuat.clone().invert());
+
+                // Set the inner camera's position and rotation based on the relative pose
+                // This creates the "looking through" effect.
+                // The Z-axis mirroring is key for the portal illusion.
+                this.innerCamera.position.set(
+                    relativePos.x,
+                    relativePos.y,
+                    -relativePos.z // Mirror Z
+                );
+                this.innerCamera.quaternion.copy(relativeQuat);
+                this.innerCamera.rotateY(Math.PI); // Rotate 180 degrees around Y for inside-out view
+
+                this.innerCamera.updateMatrixWorld(); // Important to update the camera's matrix
             }
-            
-            // Convert to normalized coordinates
-            const mouse = new THREE.Vector2();
-            mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-            
-            // Raycast
-            const raycaster = new THREE.Raycaster();
-            const camera = app.camera.getObject3D('camera');
-            raycaster.setFromCamera(mouse, camera);
-            
-            // Create a virtual ground plane
-            const groundGeometry = new THREE.PlaneGeometry(100, 100);
-            const groundMaterial = new THREE.MeshBasicMaterial({ visible: false });
-            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-            ground.rotation.x = -Math.PI / 2;
-            ground.position.y = 0;
-            
-            const intersects = raycaster.intersectObject(ground);
-            
-            if (intersects.length > 0) {
-                const point = intersects[0].point;
-                // Place portal 2 meters in front of user
-                const cameraPos = camera.position;
-                const direction = new THREE.Vector3(0, 0, -1);
-                direction.applyQuaternion(camera.quaternion);
-                direction.multiplyScalar(2);
-                
-                const portalPos = cameraPos.clone().add(direction);
-                portalPos.y = 0; // Keep on ground level
-                
-                placePortal(portalPos);
-            }
-        }
-
-        function placePortal(position) {
-            if (app.isPortalPlaced) return;
-            
-            console.log('Placing portal at:', position);
-            app.isPortalPlaced = true;
-            app.portalPosition.copy(position);
-            
-            // Position portal
-            const portalContainer = document.querySelector('#portal-container');
-            portalContainer.setAttribute('position', `${position.x} ${position.y} ${position.z}`);
-            portalContainer.setAttribute('visible', true);
-            
-            // Hide reticle
-            document.querySelector('#reticle').setAttribute('visible', false);
-            
-            updateStatus('Portal placed! Walk through the door');
-            
-            // Start proximity checking
-            startProximityCheck();
-        }
-
-        function startProximityCheck() {
-            setInterval(() => {
-                if (app.isPortalPlaced && !app.isInPortal) {
-                    checkPortalProximity();
-                }
-            }, 200);
-        }
-
-        function checkPortalProximity() {
-            const distance = app.userPosition.distanceTo(app.portalPosition);
-            
-            if (distance < 2) { // Within 2 meters of portal
-                enterPortal();
-            }
-        }
-
-        function enterPortal() {
-            if (app.isInPortal) return;
-            
-            console.log('Entering portal...');
-            app.isInPortal = true;
-            
-            updateStatus('Entering portal world...');
-            
-            // Smooth transition
-            setTimeout(() => {
-                // Hide portal container
-                document.querySelector('#portal-container').setAttribute('visible', false);
-                
-                // Show room
-                const roomContainer = document.querySelector('#room-container');
-                roomContainer.setAttribute('visible', true);
-                roomContainer.setAttribute('position', '0 0 0');
-                
-                // Position camera in room
-                app.camera.setAttribute('position', '0 1.6 2');
-                app.camera.setAttribute('wasd-controls', 'enabled: true');
-                
-                updateStatus('Welcome to the portal world! Use WASD to move');
-                
-                // Add exit option
-                setTimeout(() => {
-                    const exitBtn = document.createElement('button');
-                    exitBtn.textContent = 'Exit Portal';
-                    exitBtn.className = 'ar-button';
-                    exitBtn.style.position = 'fixed';
-                    exitBtn.style.bottom = '20px';
-                    exitBtn.style.right = '20px';
-                    exitBtn.style.zIndex = '1001';
-                    exitBtn.onclick = exitPortal;
-                    document.body.appendChild(exitBtn);
-                }, 2000);
-                
-            }, 1000);
-        }
-
-        function exitPortal() {
-            console.log('Exiting portal...');
-            app.isInPortal = false;
-            
-            // Reset scene
-            document.querySelector('#room-container').setAttribute('visible', false);
-            document.querySelector('#portal-container').setAttribute('visible', true);
-            
-            // Reset camera
-            app.camera.setAttribute('position', '0 1.6 0');
-            app.camera.setAttribute('wasd-controls', 'enabled: false');
-            
-            updateStatus('Back in AR world');
-            
-            // Remove exit button
-            const exitBtn = document.querySelector('button[onclick="exitPortal()"]');
-            if (exitBtn) exitBtn.remove();
-        }
-
-        function updateStatus(message) {
-            document.getElementById('status-text').textContent = message;
-            console.log('Status:', message);
-        }
-
-        // Handle errors
-        window.addEventListener('error', function(e) {
-            console.error('Error:', e.error);
-            updateStatus('Error occurred - please reload');
-        });
-
-        // Handle AR.js events
-        document.addEventListener('camera-init', function() {
-            console.log('Camera initialized');
-        });
-
-        document.addEventListener('camera-error', function(error) {
-            console.error('Camera error:', error);
-            updateStatus('Camera access denied');
         });
     </script>
 </body>
