@@ -199,6 +199,17 @@
             }
         }
 
+
+         const modelViewer = document.querySelector('arModel');
+        
+        // تنظیمات AR
+        modelViewer.addEventListener('ar-status', (event) => {
+            if (event.detail.status === 'session-started') {
+                // وقتی AR شروع شد
+                setupARCollision();
+            }
+        });
+        
         // تنظیم رویدادها
         function setupEventListeners() {
             const modelViewer = document.getElementById('arModel');
@@ -227,31 +238,86 @@
                 status.textContent = 'دوربین بازنشانی شد';
             });
 
-            // رویدادهای مدل
-            modelViewer.addEventListener('load', () => {
-                status.textContent = 'مدل بارگذاری شد - آماده برای AR';
-                console.log('Model loaded successfully');
-            });
 
-            modelViewer.addEventListener('error', (event) => {
-                status.textContent = 'خطا در بارگذاری مدل - لطفاً URL مدل را بررسی کنید';
-                console.error('Model loading error:', event.detail);
-            });
-
-            modelViewer.addEventListener('ar-status', (event) => {
-                console.log('AR Status:', event.detail.status);
-                if (event.detail.status === 'session-started') {
-                    status.textContent = 'جلسه AR شروع شد';
-                } else if (event.detail.status === 'object-placed') {
-                    status.textContent = 'مدل در محیط واقعی قرار گرفت';
-                } else if (event.detail.status === 'session-ended') {
-                    status.textContent = 'جلسه AR به پایان رسید';
-                } else if (event.detail.status === 'failed') {
-                    status.textContent = 'خطا در AR - دوباره تلاش کنید';
+            function setupARCollision() {
+            // تنظیمات collision برای AR
+            const scene = modelViewer.model;
+            
+            // پیدا کردن collision objects
+            scene.traverse((child) => {
+                if (child.userData.ar_collision_only) {
+                    // تنظیم collision geometry
+                    child.visible = false;
+                    child.material.transparent = true;
+                    child.material.opacity = 0;
+                    
+                    // فعال کردن occlusion
+                    child.material.colorWrite = false;
+                    child.material.depthWrite = true;
+                    child.renderOrder = -1;
                 }
             });
         }
 
+         modelViewer.addEventListener('camera-change', () => {
+            const camera = modelViewer.getCameraOrbit();
+            // محدود کردن حرکت دوربین
+            if (camera.radius < 2) {
+                modelViewer.cameraOrbit = `${camera.theta}deg ${camera.phi}deg 2m`;
+            }
+        });
+
+
+        class ARPortalManager {
+    constructor(modelViewer) {
+        this.modelViewer = modelViewer;
+        this.collisionBoxes = [];
+        this.setupCollisionDetection();
+    }
+    
+    setupCollisionDetection() {
+        // تشخیص collision با محیط واقعی
+        this.modelViewer.addEventListener('ar-tracking', (event) => {
+            const hitTestResults = event.detail.hitTestResults;
+            
+            hitTestResults.forEach(result => {
+                // بررسی تداخل با portal
+                if (this.isInsidePortal(result.pose.position)) {
+                    // جلوگیری از render محیط واقعی
+                    this.hideRealEnvironment(result);
+                }
+            });
+        });
+    }
+    
+    isInsidePortal(position) {
+        // بررسی آیا position داخل portal هست
+        const portalBounds = this.getPortalBounds();
+        return this.isPositionInBounds(position, portalBounds);
+    }
+    
+    hideRealEnvironment(hitResult) {
+        // پنهان کردن محیط واقعی
+        hitResult.occluded = true;
+        hitResult.visible = false;
+    }
+    
+    getPortalBounds() {
+        // محاسبه bounds portal
+        const model = this.modelViewer.model;
+        const box = new THREE.Box3().setFromObject(model);
+        return box;
+    }
+    
+    isPositionInBounds(position, bounds) {
+        return bounds.containsPoint(position);
+    }
+}
+
+// استفاده از کلاس
+const portalManager = new ARPortalManager(modelViewer);
+            
+        
         // تنظیم اولیه
         document.addEventListener('DOMContentLoaded', () => {
             detectDeviceAndSetModel();
