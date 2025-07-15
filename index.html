@@ -189,12 +189,12 @@
             
             if (isIOS) {
                 // برای iOS از فرمت USDZ استفاده کنید
-                modelViewer.src = 'labusdz.usdz';
+                modelViewer.src = 'portal.usdz';
                 modelViewer.setAttribute('ios-src', 'labusdz.usdz');
                 deviceInfo.textContent = 'iOS - مدل USDZ';
             } else {
                 // برای Android و سایر دستگاه‌ها از فرمت GLB استفاده کنید
-                modelViewer.src = 'labglb.glb';
+                modelViewer.src = 'portal.glb';
                 deviceInfo.textContent = 'Android/Web - مدل GLB';
             }
         }
