@@ -22,37 +22,8 @@
   <div class="section ar-section">
     <h2>Quick AR (model-viewer)</h2>
     <model-viewer src="assets/portal.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls auto-rotate shadow-intensity="1" alt="AR Portal Model" ios-src="assets/portal.usdz"></model-viewer>
-    <p>
-      <b>Having trouble with the AR button?</b><br>
-      - Make sure you are using a <b>supported mobile device</b> (Android ARCore, iOS ARKit/Quick Look).<br>
-      - The page must be served over <b>HTTPS</b> (not HTTP or localhost).<br>
-      - The model file path must be correct and accessible.<br>
-      - Try using Chrome (Android) or Safari (iOS).<br>
-      <br>
-      <button onclick="testCamera()">Test Camera Access</button>
-      <span id="camera-test-result" style="margin-left:1em;color:#f66;"></span>
-    </p>
+    <p>Tap the AR button on mobile to view the portal in your space.</p>
   </div>
-
-  <script>
-    function testCamera() {
-      const result = document.getElementById('camera-test-result');
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        result.textContent = 'Camera API not supported in this browser.';
-        return;
-      }
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          result.style.color = '#6f6';
-          result.textContent = 'Camera access granted!';
-          stream.getTracks().forEach(track => track.stop());
-        })
-        .catch(err => {
-          result.style.color = '#f66';
-          result.textContent = 'Camera access denied: ' + err.name;
-        });
-    }
-  </script>
 
   <div class="section aframe-section">
     <h2>Immersive Portal (A-Frame)</h2>
