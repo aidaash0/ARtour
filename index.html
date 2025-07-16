@@ -1,340 +1,78 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Virtual Tour - تور مجازی واقعیت افزوده</title>
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            max-width: 900px;
-            width: 100%;
-        }
-
-        h1 {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .ar-viewer {
-            width: 100%;
-            height: 600px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-
-        model-viewer {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #1a1a2e, #16213e);
-            border-radius: 15px;
-        }
-
-        .controls {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .status {
-            text-align: center;
-            color: white;
-            margin-top: 15px;
-            font-size: 1.1em;
-        }
-
-        .instructions {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            color: white;
-            text-align: center;
-        }
-
-        .device-info {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 0.9em;
-            z-index: 10;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-            
-            h1 {
-                font-size: 2em;
-            }
-            
-            .ar-viewer {
-                height: 400px;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .btn {
-                width: 100%;
-                max-width: 300px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR Portal Web Demo</title>
+  <!-- model-viewer -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #111; color: #fff; }
+    .section { padding: 2em; }
+    .ar-section { background: #222; }
+    .aframe-section { background: #111; }
+    h2 { margin-top: 0; }
+    model-viewer { width: 100%; height: 400px; background: #000; }
+    .aframe-container { width: 100%; height: 500px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🏠 تور مجازی واقعیت افزوده</h1>
-        
-        <div class="ar-viewer">
-            <div class="device-info" id="deviceInfo">در حال تشخیص دستگاه...</div>
-            
-            <model-viewer
-                id="arModel"
-                camera-controls
-                ar
-                ar-modes="webxr scene-viewer quick-look"
-                ar-scale="fixed"
-                ar-placement="floor"
-                environment-image="neutral"
-                shadow-intensity="1"
-                loading="lazy"
-                poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='150'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='300' height='150' fill='url(%23grad)' /%3E%3Ctext x='150' y='75' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='16' font-family='Arial'%3Eدر حال بارگذاری مدل...%3C/text%3E%3C/svg%3E">
-            </model-viewer>
-        </div>
-        
-        <div class="controls">
-            <button class="btn" id="arButton">📱 مشاهده در AR</button>
-            <button class="btn" id="resetCamera">🔄 بازنشانی دوربین</button>
-        </div>
-        
-        <div class="status" id="status">آماده برای نمایش</div>
-        
-        <div class="instructions">
-            <h3>📋 راهنمای استفاده</h3>
-            <p>• روی دکمه "مشاهده در AR" کلیک کنید</p>
-            <p>• با گوشی خود در محیط حرکت کنید</p>
-            <p>• مدل با مقیاس ثابت در محیط واقعی نمایش داده می‌شود</p>
-        </div>
+  <div class="section ar-section">
+    <h2>Quick AR (model-viewer)</h2>
+    <model-viewer src="assets/portal.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls auto-rotate shadow-intensity="1" alt="AR Portal Model" ios-src="assets/portal.usdz"></model-viewer>
+    <p>
+      <b>Having trouble with the AR button?</b><br>
+      - Make sure you are using a <b>supported mobile device</b> (Android ARCore, iOS ARKit/Quick Look).<br>
+      - The page must be served over <b>HTTPS</b> (not HTTP or localhost).<br>
+      - The model file path must be correct and accessible.<br>
+      - Try using Chrome (Android) or Safari (iOS).<br>
+      <br>
+      <button onclick="testCamera()">Test Camera Access</button>
+      <span id="camera-test-result" style="margin-left:1em;color:#f66;"></span>
+    </p>
+  </div>
+
+  <script>
+    function testCamera() {
+      const result = document.getElementById('camera-test-result');
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        result.textContent = 'Camera API not supported in this browser.';
+        return;
+      }
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          result.style.color = '#6f6';
+          result.textContent = 'Camera access granted!';
+          stream.getTracks().forEach(track => track.stop());
+        })
+        .catch(err => {
+          result.style.color = '#f66';
+          result.textContent = 'Camera access denied: ' + err.name;
+        });
+    }
+  </script>
+
+  <div class="section aframe-section">
+    <h2>Immersive Portal (A-Frame)</h2>
+    <div class="aframe-container">
+      <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+        <!-- Portal: a torus as the portal frame, and a 3D scene inside -->
+        <a-entity position="0 1.5 -3">
+          <a-torus color="#4CC3D9" radius="1" radius-tubular="0.1" segments-radial="16" segments-tubular="100"></a-torus>
+          <a-entity gltf-model="assets/portal.glb" scale="0.5 0.5 0.5" position="0 0 0"></a-entity>
+          <!-- 3D model inside the portal -->
+          <a-entity gltf-model="assets/1.glb" scale="1 1 1" position="0 0 -3"></a-entity>
+        </a-entity>
+        <!-- Camera -->
+        <a-entity camera look-controls wasd-controls position="0 1.6 0"></a-entity>
+        <!-- Lighting -->
+        <a-entity light="type: ambient; intensity: 0.5"></a-entity>
+        <a-entity light="type: directional; intensity: 0.8" position="1 3 2"></a-entity>
+      </a-scene>
     </div>
-
-    <script>
-        // تشخیص نوع دستگاه و انتخاب مدل مناسب
-        function detectDeviceAndSetModel() {
-            const modelViewer = document.getElementById('arModel');
-            const deviceInfo = document.getElementById('deviceInfo');
-            
-            // تشخیص iOS
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            
-            if (isIOS) {
-                // برای iOS از فرمت USDZ استفاده کنید
-                modelViewer.src = 'portal.usdz';
-                modelViewer.setAttribute('ios-src', 'portal.usdz');
-                deviceInfo.textContent = 'iOS - مدل USDZ';
-            } else {
-                // برای Android و سایر دستگاه‌ها از فرمت GLB استفاده کنید
-                modelViewer.src = 'portal.glb';
-                deviceInfo.textContent = 'Android/Web - مدل GLB';
-            }
-        }
-
-
-         const modelViewer = document.querySelector('arModel');
-        
-        // تنظیمات AR
-        modelViewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'session-started') {
-                // وقتی AR شروع شد
-                setupARCollision();
-            }
-        });
-        
-        // تنظیم رویدادها
-        function setupEventListeners() {
-            const modelViewer = document.getElementById('arModel');
-            const arButton = document.getElementById('arButton');
-            const resetCamera = document.getElementById('resetCamera');
-            const status = document.getElementById('status');
-
-            // دکمه AR
-            arButton.addEventListener('click', () => {
-                try {
-                    if (modelViewer.canActivateAR) {
-                        modelViewer.activateAR();
-                        status.textContent = 'AR فعال شد - با گوشی حرکت کنید';
-                    } else {
-                        status.textContent = 'AR در این دستگاه پشتیبانی نمی‌شود';
-                    }
-                } catch (error) {
-                    console.error('AR Error:', error);
-                    status.textContent = 'خطا در فعال‌سازی AR';
-                }
-            });
-
-            // بازنشانی دوربین
-            resetCamera.addEventListener('click', () => {
-                modelViewer.resetTurntableRotation();
-                status.textContent = 'دوربین بازنشانی شد';
-            });
-
-
-            function setupARCollision() {
-            // تنظیمات collision برای AR
-            const scene = modelViewer.model;
-            
-            // پیدا کردن collision objects
-            scene.traverse((child) => {
-                if (child.userData.ar_collision_only) {
-                    // تنظیم collision geometry
-                    child.visible = false;
-                    child.material.transparent = true;
-                    child.material.opacity = 0;
-                    
-                    // فعال کردن occlusion
-                    child.material.colorWrite = false;
-                    child.material.depthWrite = true;
-                    child.renderOrder = -1;
-                }
-            });
-        }
-
-         modelViewer.addEventListener('camera-change', () => {
-            const camera = modelViewer.getCameraOrbit();
-            // محدود کردن حرکت دوربین
-            if (camera.radius < 2) {
-                modelViewer.cameraOrbit = `${camera.theta}deg ${camera.phi}deg 2m`;
-            }
-        });
-
-
-        class ARPortalManager {
-    constructor(modelViewer) {
-        this.modelViewer = modelViewer;
-        this.collisionBoxes = [];
-        this.setupCollisionDetection();
-    }
-    
-    setupCollisionDetection() {
-        // تشخیص collision با محیط واقعی
-        this.modelViewer.addEventListener('ar-tracking', (event) => {
-            const hitTestResults = event.detail.hitTestResults;
-            
-            hitTestResults.forEach(result => {
-                // بررسی تداخل با portal
-                if (this.isInsidePortal(result.pose.position)) {
-                    // جلوگیری از render محیط واقعی
-                    this.hideRealEnvironment(result);
-                }
-            });
-        });
-    }
-    
-    isInsidePortal(position) {
-        // بررسی آیا position داخل portal هست
-        const portalBounds = this.getPortalBounds();
-        return this.isPositionInBounds(position, portalBounds);
-    }
-    
-    hideRealEnvironment(hitResult) {
-        // پنهان کردن محیط واقعی
-        hitResult.occluded = true;
-        hitResult.visible = false;
-    }
-    
-    getPortalBounds() {
-        // محاسبه bounds portal
-        const model = this.modelViewer.model;
-        const box = new THREE.Box3().setFromObject(model);
-        return box;
-    }
-    
-    isPositionInBounds(position, bounds) {
-        return bounds.containsPoint(position);
-    }
-}
-
-// استفاده از کلاس
-const portalManager = new ARPortalManager(modelViewer);
-            
-        
-        // تنظیم اولیه
-        document.addEventListener('DOMContentLoaded', () => {
-            detectDeviceAndSetModel();
-            setupEventListeners();
-            
-            // تاخیر کوتاه برای اطمینان از بارگذاری کامل
-            setTimeout(() => {
-                const modelViewer = document.getElementById('arModel');
-                const status = document.getElementById('status');
-                
-                if (modelViewer.src) {
-                    status.textContent = 'در حال بارگذاری مدل...';
-                } else {
-                    status.textContent = 'خطا: مدل تنظیم نشده';
-                }
-            }, 1000);
-        });
-    </script>
+    <p>Use mouse or touch to look around. On supported devices, enter AR to walk through the portal!</p>
+  </div>
 </body>
 </html>
